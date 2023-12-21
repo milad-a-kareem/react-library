@@ -1,38 +1,31 @@
-import path from "path";
-
-import { defineConfig } from "vite";
-
-// plugins
-import dts from "vite-plugin-dts";
-import react from "@vitejs/plugin-react-swc";
-
-/// <reference types="vitest" />
+import { defineConfig } from 'vite';
+import { resolve } from 'path';
+import { peerDependencies, dependencies } from './package.json';
+import react from '@vitejs/plugin-react-swc';
+import dts from 'vite-plugin-dts';
 
 export default defineConfig({
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: './src/setupTest.ts',
-    coverage: {
-      reporter: ['text', 'html'],
-    },
-  },
+  plugins: [
+    react(),
+    dts({
+      include: ['src/**/*'],
+    }),
+  ],
   build: {
     lib: {
-      entry: path.resolve(__dirname, "src/index.ts"),
-      name: "react-library",
-      formats: ["es", "umd"],
-      fileName: (format) => `react-library.${format}.js`,
+      entry: resolve(__dirname, 'src', 'index.ts'),
+      formats: ['es', 'cjs'],
+      fileName: (format) => `index.${format}.js`,
     },
     rollupOptions: {
-      external: ["react", "react-dom"],
-      output: {
-        globals: {
-          react: "React",
-          "react-dom": "ReactDOM",
-        },
-      },
+      external: [
+        ...Object.keys(peerDependencies),
+        ...Object.keys(dependencies),
+      ],
+      output: { preserveModules: true, exports: 'named' },
     },
+
+    target: 'esnext',
+    sourcemap: true,
   },
-  plugins: [react(), dts({ insertTypesEntry: true })],
 });
